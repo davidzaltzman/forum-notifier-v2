@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>ניהול אשכולות - {{ username }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h2 { text-align: center; }
+        .thread {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .thread.paused { opacity: 0.6; }
+        .thread h3 { margin: 0; }
+        .thread a { color: #3ddc97; text-decoration: none; }
+        .actions { display: flex; gap: 10px; }
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .pause { background: #ff6b6b; color: white; }
+        .resume { background: #3ddc97; color: #0b2e1a; }
+        .remove { background: #ffd166; color: #4a2f00; }
+        .back { margin-top: 20px; text-align: center; }
+        .back a { color: #4dabf7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>אשכולות של {{ email }}</h2>
+        {% for thread in threads %}
+        <div class="thread {% if thread.paused %}paused{% endif %}">
+            <div>
+                <h3>{{ thread.title }}</h3>
+                <a href="{{ thread.url }}" target="_blank">{{ thread.url }}</a>
+            </div>
+            <div class="actions">
+                <form method="post" action="{{ url_for('admin_toggle', user_id=user_id) }}" style="display:inline;">
+                    <input type="hidden" name="id" value="{{ thread.id }}">
+                    <button type="submit" class="{% if thread.paused %}resume{% else %}pause{% endif %}">
+                        {% if thread.paused %}הפעל{% else %}השהה{% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{{ url_for('admin_remove', user_id=user_id) }}" style="display:inline;">
+                    <input type="hidden" name="id" value="{{ thread.id }}">
+                    <button type="submit" class="remove">הסר</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="back">
+            <a href="{{ url_for('admin') }}">חזור לרשימת משתמשים</a>
+        </div>
+    </div>
+</body>
+</html>

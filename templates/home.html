@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>Thread Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .home-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 450px;
+            text-align: center;
+        }
+        h1 { margin-bottom: 40px; font-size: 36px; }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        a {
+            display: block;
+            padding: 15px 30px;
+            background: #3ddc97;
+            color: #0b2e1a;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+        a:hover { background: #2f9e72; }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <h1>🚀 Thread Tracker</h1>
+        <div class="buttons">
+            <a href="{{ url_for('login') }}">התחברות</a>
+            <a href="{{ url_for('register') }}">הרשמה</a>
+        </div>
+    </div>
+</body>
+</html>

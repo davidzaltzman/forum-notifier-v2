@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>הרשמה - Thread Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 450px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 16px;
+        }
+        input::placeholder { color: rgba(255,255,255,0.7); }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #3ddc97;
+            border: none;
+            border-radius: 10px;
+            color: #0b2e1a;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover { background: #2f9e72; }
+        .error { color: #ff6b6b; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>הרשמה</h2>
+        {% if session.get('register_code') %}
+        <form method="post">
+            <input type="text" name="code" placeholder="הכנס קוד מהמנהל" required>
+            <button type="submit">המשך</button>
+        </form>
+        {% else %}
+        <form method="post">
+            <input type="email" name="email" placeholder="אימייל" required>
+            <button type="submit" name="send_code">שלח קוד למנהל</button>
+        </form>
+        {% endif %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="error">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>

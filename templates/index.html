@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>Thread Tracker</title>
+
+    <style>
+        :root {
+            --bg1: #0f2027;
+            --bg2: #203a43;
+            --bg3: #2c5364;
+
+            --card-bg: rgba(255, 255, 255, 0.12);
+            --card-border: rgba(255, 255, 255, 0.25);
+
+            --text-main: #ffffff;
+            --text-soft: #cfd8dc;
+
+            --green: #3ddc97;
+            --red: #ff6b6b;
+            --yellow: #ffd166;
+            --blue: #4dabf7;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 20% 20%, #355c7d 0%, transparent 40%),
+                radial-gradient(circle at 80% 30%, #6c5b7b 0%, transparent 40%),
+                linear-gradient(135deg, var(--bg1), var(--bg3));
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            direction: rtl;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1550px;
+            padding: 40px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 18px;
+            font-size: 32px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== Stats Bar ===== */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-soft);
+        }
+
+        .stats-bar span {
+            padding: 8px 16px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.12);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+        }
+
+        .stats-bar .active { color: var(--green); }
+        .stats-bar .paused { color: var(--red); }
+        .stats-bar .total  { color: var(--blue); }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 2.3fr 1fr;
+            gap: 35px;
+            align-items: start;
+        }
+
+        /* ===== Cards ===== */
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 22px;
+            padding: 32px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow:
+                0 25px 60px rgba(0,0,0,0.35),
+                inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        h3 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-soft);
+        }
+
+        input[type="text"],
+        input[type="url"] {
+            width: 100%;
+            padding: 15px 16px;
+            font-size: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            margin-bottom: 14px;
+        }
+
+        input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        input[readonly] {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .hint {
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .hint.ok { color: var(--green); }
+        .hint.error { color: var(--red); }
+
+        .colors {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0 30px;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 52px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* ===== Buttons ===== */
+
+        .btn-main {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 18px;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, #4dabf7, #1c7ed6);
+            color: white;
+            transition: all 0.25s ease;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(77,171,247,0.5);
+        }
+
+        .btn-main:disabled {
+            background: rgba(255,255,255,0.25);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* ===== Sidebar Threads ===== */
+
+        .thread {
+            background: linear-gradient(
+                135deg,
+                rgba(255,255,255,0.18),
+                rgba(255,255,255,0.08)
+            );
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+
+        .thread-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .status {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 14px;
+        }
+
+        .active { color: var(--green); }
+        .paused { color: var(--red); }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .actions button {
+            padding: 8px 14px;
+            font-size: 13px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .actions button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .pause {
+            background: linear-gradient(135deg, #ff6b6b, #d64545);
+            color: white;
+        }
+
+        .resume {
+            background: linear-gradient(135deg, #3ddc97, #2f9e72);
+            color: #0b2e1a;
+        }
+
+        .edit {
+            background: linear-gradient(135deg, #ffd166, #f4a261);
+            color: #4a2f00;
+        }
+
+        .edit-form {
+            margin-top: 14px;
+        }
+
+        .edit-form input {
+            margin-bottom: 10px;
+        }
+
+        /* Profile Styles */
+        .profile-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .profile-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow:
+                0 25px 60px rgba(0,0,0,0.35),
+                inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 10px;
+            min-width: 120px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow:
+                0 25px 60px rgba(0,0,0,0.35),
+                inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .profile-dropdown a {
+            color: var(--text-main);
+            text-decoration: none;
+            display: block;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .profile-dropdown a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="profile-container">
+    <div class="profile-circle" onclick="toggleDropdown()">
+        {{ email[0].upper() }}
+    </div>
+    <div class="profile-dropdown" id="profileDropdown">
+        <div style="padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.2);">{{ email }}</div>
+        {% if is_admin %}
+        <a href="{{ url_for('admin') }}">ניהול משתמשים</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">התנתק</a>
+    </div>
+</div>
+
+<div class="container">
+    <h2>🚀 Thread Tracker Dashboard</h2>
+
+    <!-- ===== Statistics ===== -->
+    <div class="stats-bar">
+        <span class="active">
+            🟢 פעילים:
+            {{ threads | selectattr('paused','equalto',False) | list | length }}
+        </span>
+
+        <span c        SMTP_SERVER=smtp.gmail.com
+        SMTP_PORT=587
+        SMTP_USER=your_email@gmail.com
+        SMTP_PASS=your_app_password        SMTP_SERVER=smtp.gmail.com
+        SMTP_PORT=587
+        SMTP_USER=your_email@gmail.com
+        SMTP_PASS=your_app_passwordlass="paused">
+            🔴 מושהים:
+            {{ threads | selectattr('paused','equalto',True) | list | length }}
+        </span>
+
+        <span class="total">
+            📦 סה״כ:
+            {{ threads | length }}
+        </span>
+    </div>
+
+    <div class="layout">
+
+        <!-- הוספת אשכול -->
+        <div class="card">
+            <h3>➕ הוספת אשכול חדש</h3>
+
+            <form method="post" action="/add" id="addForm">
+
+                <label>שם האשכול</label>
+                <input type="text" name="title" id="titleInput" required placeholder="חובה למלא שם">
+
+                <label>קישור שהודבק (מקורי)</label>
+                <input type="url" id="rawUrl" placeholder="הדבק כאן קישור מהפורום" required>
+                <div id="status" class="hint"></div>
+
+                <label>קישור תקין (זה מה שיישמר)</label>
+                <input type="text" id="cleanUrl" name="url" readonly>
+
+                <div class="colors">
+                    <div>
+                        <label>רקע הודעה</label>
+                        <input type="color" name="color_message" value="#eafaf1">
+                    </div>
+                    <div>
+                        <label>רקע ציטוט</label>
+                        <input type="color" name="color_quote" value="#e6f7ff">
+                    </div>
+                    <div>
+                        <label>רקע ספוילר</label>
+                        <input type="color" name="color_spoiler" value="#fff0f5">
+                    </div>
+                </div>
+
+                <button class="btn-main" id="submitBtn" disabled>הוסף למעקב</button>
+            </form>
+        </div>
+
+        <!-- רשימת אשכולות -->
+        <div class="card">
+            <h3>📋 אשכולות במעקב</h3>
+
+            {% if threads %}
+                {% for t in threads %}
+                    <div class="thread" data-url="{{ t.url }}">
+                        <div class="thread-title">{{ t.title }}</div>
+
+                        <div class="status {{ 'paused' if t.paused else 'active' }}">
+                            {{ 'מושהה' if t.paused else 'פעיל' }}
+                        </div>
+
+                        <div class="actions">
+                            <form method="post" action="/toggle">
+                                <input type="hidden" name="id" value="{{ t.id }}">
+                                {% if t.paused %}
+                                    <button class="resume">▶ חידוש</button>
+                                {% else %}
+                                    <button class="pause">⏸ השהייה</button>
+                                {% endif %}
+                            </form>
+
+                            <form method="post" action="/edit-title">
+                                <input type="hidden" name="url" value="{{ t.url }}">
+                                <button class="edit">✏️ עריכת שם</button>
+                            </form>
+                        </div>
+
+                        {% if t.edit %}
+                        <form method="post" action="/save-title" class="edit-form">
+                            <input type="hidden" name="url" value="{{ t.url }}">
+                            <input type="text" name="new_title" required value="{{ t.title }}">
+                            <button class="btn-main">💾 שמור</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div>אין אשכולות במעקב</div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById('profileDropdown');
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const profile = document.querySelector('.profile-container');
+        const dropdown = document.getElementById('profileDropdown');
+        if (!profile.contains(event.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    const rawInput = document.getElementById("rawUrl");
+    const cleanInput = document.getElementById("cleanUrl");
+    const status = document.getElementById("status");
+    const submitBtn = document.getElementById("submitBtn");
+    const titleInput = document.getElementById("titleInput");
+
+    const existingUrls = Array.from(document.querySelectorAll(".thread"))
+        .map(el => el.dataset.url);
+
+    function isValidProgThread(url) {
+        try {
+            const u = new URL(url);
+            return (
+                (u.hostname === "www.prog.co.il" || u.hostname === "prog.co.il") &&
+                u.pathname.startsWith("/threads/")
+            );
+        } catch {
+            return false;
+        }
+    }
+
+    function normalizeUrl(url) {
+        return url.replace(/\/page-\d+.*$/i, "");
+    }
+
+    function updateState(ok) {
+        const hasTitle = titleInput.value.trim().length > 0;
+        submitBtn.disabled = !(ok && hasTitle && cleanInput.value.trim());
+    }
+
+    function handleUrlInput() {
+        let url = rawInput.value.trim();
+        cleanInput.value = "";
+        status.textContent = "";
+        status.className = "hint";
+        updateState(false);
+
+        if (!url) return;
+
+        url = normalizeUrl(url);
+
+        if (!isValidProgThread(url)) {
+            status.textContent = "❌ זה לא קישור תקין לאשכול בפורום פרוג";
+            status.classList.add("error");
+            return;
+        }
+
+        if (existingUrls.includes(url)) {
+            status.textContent = "⚠️ אתה כבר עוקב אחרי האשכול הזה";
+            status.classList.add("error");
+            return;
+        }
+
+        try {
+            cleanInput.value = decodeURIComponent(url);
+        } catch {
+            cleanInput.value = url;
+        }
+
+        status.textContent = "✔️ קישור תקין וחדש – מוכן להוספה";
+        status.classList.add("ok");
+        updateState(true);
+    }
+
+    rawInput.addEventListener("input", handleUrlInput);
+    titleInput.addEventListener("input", () => updateState(status.classList.contains("ok")));
+
+    document.getElementById("addForm").addEventListener("submit", e => {
+        if (submitBtn.disabled) e.preventDefault();
+    });
+</script>
+
+</body>
+</html>

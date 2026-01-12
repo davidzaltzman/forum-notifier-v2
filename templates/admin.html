@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>ניהול משתמשים - Thread Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 { text-align: center; }
+        .user-list {
+            display: grid;
+            gap: 10px;
+        }
+        .user-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .user-card a {
+            color: #3ddc97;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .user-card a:hover { text-decoration: underline; }
+        .back { margin-top: 20px; text-align: center; }
+        .back a { color: #4dabf7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>ניהול משתמשים</h2>
+        <div class="user-list">
+            {% for user in users %}
+                <div class="user-card">
+                    <h3>{{ user.email }}</h3>
+                    <p>סטטוס: {{ user.status }}</p>
+                    <p>נרשם: {{ user.created_at }}</p>
+                    <a href="{{ url_for('admin_user', user_id=user.id) }}">נהל אשכולות</a>
+                    {% if user.status == 'active' %}
+                    <form method="post" action="{{ url_for('admin_disable', user_id=user.id) }}" style="display:inline;">
+                        <button type="submit" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">השבת</button>
+                    </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="invite">
+            <a href="{{ url_for('invite') }}">שלח הזמנה למשתמש חדש</a>
+        </div>
+        <div class="back">
+            <a href="{{ url_for('index') }}">חזור לדף הבית</a>
+        </div>
+    </div>
+</body>
+</html>

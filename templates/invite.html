@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>שליחת הזמנה - Thread Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        input::placeholder { color: rgba(255,255,255,0.7); }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #3ddc97;
+            border: none;
+            border-radius: 10px;
+            color: #0b2e1a;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background: #2f9e72; }
+        .error { color: #ff6b6b; margin-top: 10px; }
+        .back { margin-top: 20px; }
+        .back a { color: #4dabf7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>שליחת הזמנה</h2>
+        <form method="post">
+            <input type="email" name="email" placeholder="אימייל של המשתמש החדש" required>
+            <button type="submit">שלח הזמנה</button>
+        </form>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="error">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        <div class="back">
+            <a href="{{ url_for('admin') }}">חזור לניהול</a>
+        </div>
+    </div>
+</body>
+</html>
