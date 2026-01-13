@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 import os, sqlite3, hashlib, secrets, smtplib
+import threading  # ✅ added (background email)
 from email.mime.text import MIMEText
 from functools import wraps
 from datetime import datetime
@@ -101,12 +102,15 @@ def send_email(to, subject, body):
     if not all([smtp_server, smtp_user, smtp_pass]):
         print("SMTP not configured")
         return
+
     msg = MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = smtp_user
     msg['To'] = to
+
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        # ✅ added timeout so SMTP can't block forever
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
         server.starttls()
         server.login(smtp_user, smtp_pass)
         server.sendmail(smtp_user, to, msg.as_string())
@@ -114,6 +118,14 @@ def send_email(to, subject, body):
         print(f"Email sent to {to}")
     except Exception as e:
         print(f"Email error: {e}")
+
+# ✅ added: fire-and-forget background send
+def send_email_background(to, subject, body):
+    threading.Thread(
+        target=send_email,
+        args=(to, subject, body),
+        daemon=True
+    ).start()
 
 def parse_threads(user_id, edit_url=None):
     conn = get_db()
@@ -171,9 +183,9 @@ def invite():
         try:
             c.execute("INSERT INTO invitations (email, temp_password) VALUES (?, ?)", (email, temp_password))
             conn.commit()
-            # Send to admin
+            # Send to admin (✅ background)
             admin_email = os.getenv("ADMIN_EMAIL")
-            send_email(admin_email, "הזמנה חדשה", f"משתמש חדש: {email}\nסיסמה זמנית: {temp_password}")
+            send_email_background(admin_email, "הזמנה חדשה", f"משתמש חדש: {email}\nסיסמה זמנית: {temp_password}")
             flash("הזמנה נשלחה למנהל")
         except sqlite3.IntegrityError:
             flash("הזמנה כבר קיימת לאימייל זה")
@@ -195,7 +207,8 @@ def register():
                 c.execute("INSERT INTO invitations (email, code) VALUES (?, ?)", (email, code))
                 conn.commit()
                 admin_email = os.getenv("ADMIN_EMAIL")
-                send_email(admin_email, "קוד הרשמה חדש", f"משתמש חדש: {email}\nקוד: {code}")
+                # ✅ background send so request returns immediately
+                send_email_background(admin_email, "קוד הרשמה חדש", f"משתמש חדש: {email}\nקוד: {code}")
                 session["register_code"] = code
                 session["register_email"] = email
                 flash("קוד נשלח למנהל. הכנס את הקוד שקיבלת.")
@@ -362,4 +375,3 @@ def admin_disable(user_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)
-
